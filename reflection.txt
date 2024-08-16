@@ -1,0 +1,10 @@
+Summary:
+Web-based calculator app made using React
+
+Lessons:
+1. Frontend Design tips:
+    - Main elements should contrast with background (calculator and webpage color)
+    - Buttons and screen should be easily readable
+    - Wire-framing: a process where designers draw overviews of interactive products to establish the
+                    structure and flow of possible design solutions
+2.
