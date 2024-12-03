@@ -36,3 +36,22 @@
     transform: rotate(360deg);
   }
 }
+
+.group {
+  background: #eaeaed;
+  border-radius: 6px;
+  clear: both;
+  *zoom: 1;
+}
+
+.group,
+ButtonBox,
+HistoryBox,
+ButtonBox {
+  float: left;
+  width: 63%;
+}
+HistoryBox {
+  float: left;
+  width: 30%;
+}
