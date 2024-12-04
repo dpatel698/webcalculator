@@ -14,18 +14,17 @@ const removeSpaces = (num) => num.toString().replace(/\s/g, "");
 
 const App = () => {
     const [calc, setCalc] = useState({
-        sign: "",
-        num: 0,
-        res: 0,
-        operationStack: []
+        currentInput: "0",
+        operationStack: [],
+        lastInputType: null // 'number' or 'operation'
     });
 
     //-----Code for calculating result from stack--------------------------------------------------------
-    const calculateResult = () => {
+    const calculateResult = (stack) => {
         let result = 0;
         let currentOperation = '+';
 
-        calc.operationStack.forEach(item => {
+        stack.forEach(item => {
             if (item.type === 'number') {
                 switch (currentOperation) {
                     case '+':
@@ -45,14 +44,8 @@ const App = () => {
                 currentOperation = item.value;
             }
         });
-        console.log(result);
-        setCalc({
-            ...calc,
-            operationStack: [],
-            sign: "",
-            num: toLocaleString(Number(removeSpaces(result))),
-            res: result
-        });
+        console.log(stack);
+        return result
     };
 
     //-----Code for input handling--------------------------------------------------------
@@ -60,108 +53,114 @@ const App = () => {
         e.preventDefault();
         const value = e.target.innerHTML;
 
-        if (removeSpaces(calc.num).length < 16) {
-            setCalc({
-                num: calc.num === 0 && value === "0" ? "0" : removeSpaces(calc.num) % 1 === 0 ? toLocaleString(Number(removeSpaces(calc.num + value))) : toLocaleString(calc.num + value),
-                res: !calc.sign ? 0 : calc.res,
-                operationStack: [
-                    ...calc.operationStack,
-                    {type: 'number', value: calc.num === 0 && value === "0" ? "0" : calc.num % 1 === 0 ? Number(removeSpaces(calc.num + value)) : calc.num + value},
-                ]
-            });
-        }
+        setCalc(prevCalc => ({
+            ...prevCalc,
+            currentInput: prevCalc.currentInput === "0" ? value : prevCalc.currentInput + value,
+            lastInputType: 'number',
+
+        }));
     };
 
     const commaClickHandler = (e) => {
         e.preventDefault();
         const value = e.target.innerHTML;
 
-        setCalc({
-            ...calc, num: !calc.num.toString().includes(".") ? calc.num + value : calc.num,
-        });
+        setCalc(prevCalc => ({
+            ...prevCalc,
+            currentInput: !prevCalc.currentInput.includes(".") ? prevCalc.currentInput + value : prevCalc.currentInput,
+            lastInputType: 'number'
+        }));
     };
 
     const signClickHandler = (e) => {
         e.preventDefault();
         const value = e.target.innerHTML;
 
-        setCalc({
-            ...calc,
-            operationStack: [
-                ...calc.operationStack,
-                {type: 'number', value: Number(removeSpaces(calc.num))},
-                {type: 'operation', value: value}
-            ],
-            sign: value,
-            num: 0
+        setCalc(prevCalc => {
+            const newStack = [...prevCalc.operationStack];
+            if (prevCalc.lastInputType === 'number') {
+                newStack.push({type: 'number', value: parseFloat(prevCalc.currentInput)});
+            }
+            newStack.push({type: 'operation', value: value});
+
+            return {
+                ...prevCalc,
+                operationStack: newStack,
+                currentInput: "0",
+                lastInputType: 'operation'
+            };
         });
     };
 
     const equalsClickHandler = () => {
-        if (calc.num) {
-            // Add the final number to stack before calculating
-            setCalc({
-                ...calc,
-                operationStack: [
-                    ...calc.operationStack,
-                    {type: 'number', value: Number(removeSpaces(calc.num))},
-                ],
-            });
-        }
-        console.log(calc.operationStack);
-        calculateResult();
+        setCalc(prevCalc => {
+            const finalStack = [...prevCalc.operationStack];
+
+            if (prevCalc.lastInputType === 'number') {
+                finalStack.push({ type: 'number', value: parseFloat(prevCalc.currentInput) });
+            }
+
+            // Perform calculation here (implement PEMDAS)
+            const result = calculateResult(finalStack);
+
+            return {
+                currentInput: result.toString(),
+                operationStack: [],
+                lastInputType: 'number'
+            };
+        });
     };
 
     const invertClickHandler = () => {
-        setCalc({
-            ...calc,
-            num: calc.num ? toLocaleString(removeSpaces(calc.num) * -1) : 0,
-            res: calc.res ? toLocaleString(removeSpaces(calc.res) * -1) : 0,
-            sign: "",
-        });
+        setCalc(prevCalc => ({
+            ...prevCalc,
+            currentInput: (-parseFloat(prevCalc.currentInput)).toString(),
+            lastInputType: 'number'
+        }));
     };
 
     const percentClickHandler = () => {
-        let num = calc.num ? parseFloat(removeSpaces(calc.num)) : 0;
-        let res = calc.res ? parseFloat(removeSpaces(calc.res)) : 0;
-
-        setCalc({
-            ...calc, num: (num /= Math.pow(100, 1)), res: (res /= Math.pow(100, 1)), sign: "",
-        });
+        setCalc(prevCalc => ({
+            ...prevCalc,
+            currentInput: (parseFloat(prevCalc.currentInput) / 100).toString(),
+            lastInputType: 'number'
+        }));
     };
 
     const resetClickHandler = () => {
         setCalc({
-            ...calc, sign: "", num: 0, res: 0,
+            currentInput: "0",
+            operationStack: [],
+            lastInputType: null
         });
     };
 
-    return (<Wrapper>
-        <Screen value={calc.num ? calc.num : calc.res}/>
-        <div className="container">
-            <div className="component">
-                <ButtonBox>
-                    {btnValues.flat().map((btn, i) => {
-                        return (<Button
-                            key={i}
-                            className={btn === "=" ? "equals" : ""}
-                            value={btn}
-                            onClick={btn === "C" ? resetClickHandler : btn === "+-" ?
-                                invertClickHandler : btn === "%" ? percentClickHandler :
-                                    btn === "=" ? equalsClickHandler : btn === "/" || btn === "X" ||
-                                    btn === "-" || btn === "+" ? signClickHandler : btn === "." ?
-                                        commaClickHandler : numClickHandler}
-                        />);
-                    })}
-                </ButtonBox>
-            </div>
-            <div className="component">
-                <HistoryBox>
-                </HistoryBox>
-            </div>
+return (<Wrapper>
+    <Screen value={calc.currentInput}/>
+    <div className="container">
+        <div className="component">
+            <ButtonBox>
+                {btnValues.flat().map((btn, i) => {
+                    return (<Button
+                        key={i}
+                        className={btn === "=" ? "equals" : ""}
+                        value={btn}
+                        onClick={btn === "C" ? resetClickHandler : btn === "+-" ?
+                            invertClickHandler : btn === "%" ? percentClickHandler :
+                                btn === "=" ? equalsClickHandler : btn === "/" || btn === "X" ||
+                                btn === "-" || btn === "+" ? signClickHandler : btn === "." ?
+                                    commaClickHandler : numClickHandler}
+                    />);
+                })}
+            </ButtonBox>
         </div>
+        <div className="component">
+            <HistoryBox>
+            </HistoryBox>
+        </div>
+    </div>
 
-    </Wrapper>);
+</Wrapper>);
 };
 
 export default App;
