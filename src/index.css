@@ -23,3 +23,44 @@ body {
   flex: 1;
   margin: 0 10px;
 }
+.historyBox {
+  width: 100%;
+  height: 100%;
+  background-color: #5c5b5b;
+  border-radius: 10px;
+  background-color: #5c5b5b;
+  color: #eaeaed;
+  font-weight: bold;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.historyBox option {
+  padding: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.historyBox option:last-child {
+  border-bottom: none;
+}
+
+.historyBox option:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+/* Target the scrollbar for Chrome, Edge, and Safari */
+select::-webkit-scrollbar {
+  width: 10px; /* Set the width of the scrollbar */
+}
+
+select::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Set the background color of the track */
+}
+
+select::-webkit-scrollbar-thumb {
+  background: #888; /* Set the background color of the thumb */
+  border-radius: 5px; /* Set the border radius of the thumb */
+}
+
+select::-webkit-scrollbar-thumb:hover {
+  background: #2b2a2a; /* Set the background color of the thumb on hover */
+}

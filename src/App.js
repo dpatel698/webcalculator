@@ -2,7 +2,6 @@ import React, {useState} from "react";
 
 import Wrapper from "./components/Wrapper";
 import Screen from "./components/Screen";
-import HistoryBox from "./components/HistoryBox";
 import ButtonBox from "./components/ButtonBox";
 import Button from "./components/Button";
 
@@ -16,36 +15,96 @@ const App = () => {
     const [calc, setCalc] = useState({
         currentInput: "0",
         operationStack: [],
-        lastInputType: null // 'number' or 'operation'
+        lastInputType: null, // 'number' or 'operation
+        history: []
     });
 
     //-----Code for calculating result from stack--------------------------------------------------------
-    const calculateResult = (stack) => {
-        let result = 0;
-        let currentOperation = '+';
+    const shuntingYard = (operationStack) => {
+        const precedence = {'+': 1, '-': 1, 'X': 2, '/': 2};
+        const outputQueue = [];
+        const operatorStack = [];
 
-        stack.forEach(item => {
+        for (const item of operationStack) {
             if (item.type === 'number') {
-                switch (currentOperation) {
+                outputQueue.push(item.value);
+            } else if (item.type === 'operation') {
+                while (operatorStack.length > 0 &&
+                precedence[operatorStack[operatorStack.length - 1]] >= precedence[item.value]) {
+                    outputQueue.push(operatorStack.pop());
+                }
+                operatorStack.push(item.value);
+            }
+        }
+
+        while (operatorStack.length > 0) {
+            outputQueue.push(operatorStack.pop());
+        }
+
+        return outputQueue;
+    };
+
+    const calculatePostfix = (postfixExpression) => {
+        const stack = [];
+
+        for (const token of postfixExpression) {
+            if (typeof token === 'number') {
+                stack.push(token);
+            } else {
+                const b = stack.pop();
+                const a = stack.pop();
+
+                switch (token) {
                     case '+':
-                        result += item.value;
+                        stack.push(a + b);
                         break;
                     case '-':
-                        result -= item.value;
+                        stack.push(a - b);
                         break;
                     case 'X':
-                        result *= item.value;
+                        stack.push(a * b);
                         break;
                     case '/':
-                        result /= item.value;
+                        stack.push(a / b);
                         break;
                 }
-            } else {
-                currentOperation = item.value;
             }
-        });
-        console.log(stack);
-        return result
+        }
+
+        return stack[0];
+    };
+
+    const postfixToInfix = (postfixExpression) =>{
+        const stack = [];
+        const precedence = { '+': 1, '-': 1, 'X': 2, '/': 2 };
+
+        for (const token of postfixExpression) {
+            if (typeof token === 'number') {
+                stack.push(token.toString());
+            } else {
+                const right = stack.pop();
+                const left = stack.pop();
+
+                // Determine if parentheses are needed
+                const needParens = (op, expr) => {
+                    if (typeof expr === 'number') return false;
+                    return precedence[op] > precedence[expr[0]] ||
+                        (precedence[op] === precedence[expr[0]] && op !== expr[0]);
+                };
+
+                const leftWithParens = needParens(token, left) ? `(${left})` : left;
+                const rightWithParens = needParens(token, right) ? `(${right})` : right;
+
+                stack.push(`${leftWithParens} ${token} ${rightWithParens}`);
+            }
+        }
+
+        return stack[0];
+    }
+
+    const calculateResult = (stack) => {
+        const postfixExpression = shuntingYard(stack);
+        return [calculatePostfix(postfixExpression), postfixToInfix(postfixExpression)]
     };
 
     //-----Code for input handling--------------------------------------------------------
@@ -92,24 +151,26 @@ const App = () => {
         });
     };
 
+
     const equalsClickHandler = () => {
         setCalc(prevCalc => {
             const finalStack = [...prevCalc.operationStack];
 
             if (prevCalc.lastInputType === 'number') {
-                finalStack.push({ type: 'number', value: parseFloat(prevCalc.currentInput) });
+                finalStack.push({type: 'number', value: parseFloat(prevCalc.currentInput)});
             }
 
-            // Perform calculation here (implement PEMDAS)
             const result = calculateResult(finalStack);
 
             return {
-                currentInput: result.toString(),
+                currentInput: result[0].toString(),
                 operationStack: [],
-                lastInputType: 'number'
+                lastInputType: 'number',
+                history: [...prevCalc.history, result[1]]
             };
         });
     };
+
 
     const invertClickHandler = () => {
         setCalc(prevCalc => ({
@@ -128,39 +189,46 @@ const App = () => {
     };
 
     const resetClickHandler = () => {
-        setCalc({
+        setCalc({...calc,
             currentInput: "0",
             operationStack: [],
             lastInputType: null
         });
     };
 
-return (<Wrapper>
-    <Screen value={calc.currentInput}/>
-    <div className="container">
-        <div className="component">
-            <ButtonBox>
-                {btnValues.flat().map((btn, i) => {
-                    return (<Button
-                        key={i}
-                        className={btn === "=" ? "equals" : ""}
-                        value={btn}
-                        onClick={btn === "C" ? resetClickHandler : btn === "+-" ?
-                            invertClickHandler : btn === "%" ? percentClickHandler :
-                                btn === "=" ? equalsClickHandler : btn === "/" || btn === "X" ||
-                                btn === "-" || btn === "+" ? signClickHandler : btn === "." ?
-                                    commaClickHandler : numClickHandler}
-                    />);
-                })}
-            </ButtonBox>
+    const HistoryList = ({ expressions }) => (
+        <select size="5" className="historyBox">
+            {expressions.map((expr, index) => (
+                <option key={index}>{expr}</option>
+            ))}
+        </select>
+    );
+    return (<Wrapper>
+        <Screen value={calc.currentInput}/>
+        <div className="container">
+            <div className="component">
+                <ButtonBox>
+                    {btnValues.flat().map((btn, i) => {
+                        return (<Button
+                            key={i}
+                            className={btn === "=" ? "equals" : ""}
+                            value={btn}
+                            onClick={btn === "C" ? resetClickHandler : btn === "+-" ?
+                                invertClickHandler : btn === "%" ? percentClickHandler :
+                                    btn === "=" ? equalsClickHandler : btn === "/" || btn === "X" ||
+                                    btn === "-" || btn === "+" ? signClickHandler : btn === "." ?
+                                        commaClickHandler : numClickHandler}
+                        />);
+                    })}
+                </ButtonBox>
+            </div>
+            <div className="component">
+                <HistoryList expressions={calc.history}>
+                </HistoryList>
+            </div>
         </div>
-        <div className="component">
-            <HistoryBox>
-            </HistoryBox>
-        </div>
-    </div>
 
-</Wrapper>);
+    </Wrapper>);
 };
 
 export default App;
