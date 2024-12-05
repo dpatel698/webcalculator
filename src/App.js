@@ -42,6 +42,7 @@ const App = () => {
 
     const calculatePostfix = (postfixExpression) => {
         const stack = [];
+        console.log(postfixExpression);
 
         for (const token of postfixExpression) {
             if (typeof token === 'number') {
@@ -62,6 +63,8 @@ const App = () => {
                         break;
                     case '/':
                         stack.push(a / b);
+                        break;
+                    default:
                         break;
                 }
             }
