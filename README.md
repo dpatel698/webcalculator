@@ -63,7 +63,7 @@ npm start
 ## 🔍 Example Calculations
 - 1 + 2 → 3
 - 2 * 3 + 4 → 10
-- 10 / (6 - 1) → 2
+- 10 - 10 / 2 → 5
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome! Please fork the repository and submit a pull request if you have suggestions for improvements or new features.
