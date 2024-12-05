@@ -7,10 +7,6 @@ import Button from "./components/Button";
 
 const btnValues = [["C", "+-", "%", "/"], [7, 8, 9, "X"], [4, 5, 6, "-"], [1, 2, 3, "+"], [0, ".", "="],];
 
-const toLocaleString = (num) => String(num).replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, "$1 ");
-
-const removeSpaces = (num) => num.toString().replace(/\s/g, "");
-
 const App = () => {
     const [calc, setCalc] = useState({
         currentInput: "0",
@@ -74,9 +70,9 @@ const App = () => {
         return stack[0];
     };
 
-    const postfixToInfix = (postfixExpression) =>{
+    const postfixToInfix = (postfixExpression) => {
         const stack = [];
-        const precedence = { '+': 1, '-': 1, 'X': 2, '/': 2 };
+        const precedence = {'+': 1, '-': 1, 'X': 2, '/': 2};
 
         for (const token of postfixExpression) {
             if (typeof token === 'number') {
@@ -153,22 +149,24 @@ const App = () => {
 
 
     const equalsClickHandler = () => {
-        setCalc(prevCalc => {
-            const finalStack = [...prevCalc.operationStack];
+        if (calc.lastInputType) {
+            setCalc(prevCalc => {
+                const finalStack = [...prevCalc.operationStack];
 
-            if (prevCalc.lastInputType === 'number') {
-                finalStack.push({type: 'number', value: parseFloat(prevCalc.currentInput)});
-            }
+                if (prevCalc.lastInputType === 'number') {
+                    finalStack.push({type: 'number', value: parseFloat(prevCalc.currentInput)});
+                }
 
-            const result = calculateResult(finalStack);
+                const result = calculateResult(finalStack);
 
-            return {
-                currentInput: result[0].toString(),
-                operationStack: [],
-                lastInputType: 'number',
-                history: [...prevCalc.history, result[1]]
-            };
-        });
+                return {
+                    currentInput: result[0].toString(),
+                    operationStack: [],
+                    lastInputType: 'number',
+                    history: [...prevCalc.history, result[1]]
+                };
+            });
+        }
     };
 
 
@@ -189,14 +187,15 @@ const App = () => {
     };
 
     const resetClickHandler = () => {
-        setCalc({...calc,
+        setCalc({
+            ...calc,
             currentInput: "0",
             operationStack: [],
             lastInputType: null
         });
     };
 
-    const HistoryList = ({ expressions }) => (
+    const HistoryList = ({expressions}) => (
         <select size="5" className="historyBox">
             {expressions.map((expr, index) => (
                 <option key={index}>{expr}</option>

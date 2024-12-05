@@ -7,4 +7,4 @@ Lessons:
     - Buttons and screen should be easily readable
     - Wire-framing: a process where designers draw overviews of interactive products to establish the
                     structure and flow of possible design solutions
-2.
+2. Be careful using set function sequentially on hook states, variables can become unstable
