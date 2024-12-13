@@ -1,7 +1,6 @@
 # JavaScript Calculator Web App 🧮
 
-### Web Address :  
-[supremecalculator.netlify.app](supremecalculator.netlify.app)
+### Web Address :  [Click this link](supremecalculator.netlify.app)
 
 ## Overview
 This web-based calculator is a comprehensive implementation of a mathematical expression parser and evaluator, built using React. The project demonstrates advanced algorithmic techniques like the Shunting Yard algorithm for handling complex mathematical expressions with proper operator precedence.
